@@ -11,8 +11,19 @@ def check(pytorch_version: str, cuda_version: str):
     # You probably could perform pytorch with the cuda-version
     # if you built pytorch at local.
     maybe_supported = []
+    if LooseVersion(pytorch_version) >= LooseVersion("1.10"):
+        raise NotImplementedError(f"pytorch={pytorch_version}")
+    # 1.9.0
+    elif LooseVersion(pytorch_version) >= LooseVersion("1.9"):
+        supported = ["11.1", "10.2"]
+    # 1.8.0 or 1.8.1
+    elif LooseVersion(pytorch_version) >= LooseVersion("1.8"):
+        supported = ["11.1", "10.2", "10.1"]
+    # 1.7.0 or 1.7.1
+    elif LooseVersion(pytorch_version) >= LooseVersion("1.7"):
+        supported = ["11.0", "10.2", "10.1", "9.2"]
     # 1.6.0
-    if LooseVersion("1.7") > LooseVersion(pytorch_version) >= LooseVersion("1.6"):
+    elif LooseVersion(pytorch_version) >= LooseVersion("1.6"):
         supported = ["10.2", "10.1", "9.2"]
         # FIXME(kamo): 10.0 is not existing, but it seems to work in my environment
         maybe_supported = ["10.0"]

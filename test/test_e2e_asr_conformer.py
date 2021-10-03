@@ -46,24 +46,22 @@ def prepare(args):
     olens = [3, 4]
     n_token = odim - 1
     model = E2E(idim, odim, args)
-    x = torch.randn(batchsize, 10, idim)
-    y = (torch.rand(batchsize, 4) * n_token % n_token).long()
+    x = torch.randn(batchsize, max(ilens), idim)
+    y = (torch.rand(batchsize, max(olens)) * n_token % n_token).long()
     for i in range(batchsize):
         x[i, ilens[i] :] = -1
         y[i, olens[i] :] = model.ignore_id
 
-    data = []
+    data = {}
+    uttid_list = []
     for i in range(batchsize):
-        data.append(
-            (
-                "utt%d" % i,
-                {
-                    "input": [{"shape": [ilens[i], idim]}],
-                    "output": [{"shape": [olens[i]]}],
-                },
-            )
-        )
-    return model, x, torch.tensor(ilens), y, data
+        data["utt%d" % i] = {
+            "input": [{"shape": [ilens[i], idim]}],
+            "output": [{"shape": [olens[i]]}],
+        }
+        uttid_list.append("utt%d" % i)
+
+    return model, x, torch.tensor(ilens), y, data, uttid_list
 
 
 conformer_mcnn_args = dict(
@@ -87,6 +85,26 @@ conformer_mcnn_mmacaron_mrelattn_args = dict(
     use_cnn_module=False,
 )
 
+conformer_ctc = dict(
+    transformer_encoder_pos_enc_layer_type="rel_pos",
+    transformer_encoder_selfattn_layer_type="rel_selfattn",
+    macaron_style=True,
+    use_cnn_module=False,
+    mtlalpha=1.0,
+)
+
+conformer_intermediate_ctc = dict(
+    transformer_encoder_pos_enc_layer_type="rel_pos",
+    transformer_encoder_selfattn_layer_type="rel_selfattn",
+    macaron_style=True,
+    use_cnn_module=False,
+    mtlalpha=1.0,
+    elayers=2,
+    intermediate_ctc_weight=0.3,
+    intermediate_ctc_layer="1",
+    stochastic_depth_rate=0.3,
+)
+
 
 def _savefn(*args, **kwargs):
     return
@@ -99,11 +117,13 @@ def _savefn(*args, **kwargs):
         conformer_mcnn_args,
         conformer_mcnn_mmacaron_args,
         conformer_mcnn_mmacaron_mrelattn_args,
+        conformer_ctc,
+        conformer_intermediate_ctc,
     ],
 )
 def test_transformer_trainable_and_decodable(model_dict):
     args = make_arg(**model_dict)
-    model, x, ilens, y, data = prepare(args)
+    model, x, ilens, y, data, uttid_list = prepare(args)
 
     # check for pure CTC and pure Attention
     if args.mtlalpha == 1:
@@ -130,7 +150,7 @@ def test_transformer_trainable_and_decodable(model_dict):
 
     # test attention plot
     attn_dict = model.calculate_all_attentions(x[0:1], ilens[0:1], y[0:1])
-    plot.plot_multi_head_attention(data, attn_dict, "", savefn=_savefn)
+    plot.plot_multi_head_attention(data, uttid_list, attn_dict, "", savefn=_savefn)
 
     # test CTC plot
     ctc_probs = model.calculate_all_ctc_probs(x[0:1], ilens[0:1], y[0:1])

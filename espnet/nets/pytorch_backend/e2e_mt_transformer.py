@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# encoding: utf-8
-
 # Copyright 2019 Kyoto University (Hirofumi Inaguma)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -334,7 +331,7 @@ class E2E(MTInterface, torch.nn.Module):
 
             # add eos in the final loop to avoid that there are no ended hyps
             if i == maxlen - 1:
-                logging.info("adding <eos> in the last postion in the loop")
+                logging.info("adding <eos> in the last position in the loop")
                 for hyp in hyps:
                     hyp["yseq"].append(self.eos)
 

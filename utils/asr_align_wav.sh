@@ -17,7 +17,6 @@ backend=pytorch
 stage=-1       # start from -1 if you need to start from model download
 stop_stage=100
 ngpu=0         # number of gpus ("0" uses cpu, otherwise use gpu)
-debugmode=1
 verbose=1      # verbose option
 
 # feature configuration
@@ -35,25 +34,30 @@ api=v1
 subsampling_factor=4
 # minium confidence score in log space - may need adjustment depending on data and model, e.g. -1.5 or -5.0
 min_confidence_score=-5.0
-# minimum length of one utterance
+# minimum length of one utterance (counted in frames)
 min_window_size=8000
+# partitioning length L for calculation of the confidence score
+scoring_length=30
 
 
 # download related
 models=tedlium2.rnn.v2
 dict=
 nlsyms=
+download_dir=${align_dir}/download
 
 . utils/parse_options.sh || exit 1;
 
 help_message=$(cat <<EOF
 Usage:
     $0 [options] <wav_file> "<text>"
+    $0 [options] <wav_file> <utt_text_file>
 
 Options:
     --backend <chainer|pytorch>     # chainer or pytorch (Default: pytorch)
     --ngpu <ngpu>                   # Number of GPUs (Default: 0)
     --align-dir <directory_name>    # Name of directory to store decoding temporary data
+    --download-dir <directory_name> # Name of directory to store download files
     --models <model_name>           # Model name (e.g. tedlium2.transformer.v1)
     --cmvn <path>                   # Location of cmvn.ark
     --align-model <path>            # Location of E2E model
@@ -67,6 +71,8 @@ Example:
 
     # Align using model name
     $0 --models tedlium2.transformer.v1 example.wav "example text"
+
+    $0 --models tedlium2.transformer.v1 example.wav utt_text.txt
 
     # Align using model file
     $0 --cmvn cmvn.ark --align_model model.acc.best --align_config conf/align.yaml example.wav
@@ -83,6 +89,7 @@ Available models:
     - librispeech.transformer.v1.transformerlm.v1
     - commonvoice.transformer.v1
     - csj.transformer.v1
+    - csj.rnn.v1
     - wsj.transformer.v1
     - wsj.transformer_small.v1
 EOF
@@ -96,7 +103,6 @@ train_cmd=
 
 wav=$1
 text=$2
-download_dir=${align_dir}/download
 
 if [ ! $# -eq 2 ]; then
     echo "${help_message}"
@@ -149,6 +155,7 @@ function download_models () {
         "librispeech.transformer.v1.transformerlm.v1") share_url="https://drive.google.com/open?id=17cOOSHHMKI82e1MXj4r2ig8gpGCRmG2p" ;;
         "commonvoice.transformer.v1") share_url="https://drive.google.com/open?id=1tWccl6aYU67kbtkm8jv5H6xayqg1rzjh" ;;
         "csj.transformer.v1") share_url="https://drive.google.com/open?id=120nUQcSsKeY5dpyMWw_kI33ooMRGT2uF" ;;
+        "csj.rnn.v1") share_url="https://drive.google.com/open?id=1ALvD4nHan9VDJlYJwNurVr7H7OV0j2X9" ;;
         "wsj.transformer.v1") share_url="https://drive.google.com/open?id=1Az-4H25uwnEFa4lENc-EKiPaWXaijcJp" ;;
         "wsj.transformer_small.v1") share_url="https://drive.google.com/open?id=1jdEKbgWhLTxN_qP4xwE7mTOPmp7Ga--T" ;;
         *) echo "No such models: ${models}"; exit 1 ;;
@@ -223,7 +230,13 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "$base $wav" > ${align_dir}/data/wav.scp
     echo "X $base" > ${align_dir}/data/spk2utt
     echo "$base X" > ${align_dir}/data/utt2spk
-    echo "$base $text" > ${align_dir}/data/text
+    utt_text="${align_dir}/data/text"
+    if [ -f "$text" ]; then
+        cp -v "$text" "$utt_text"
+        utt_text="${text}" # Use the original file, because copied file will be truncated
+    else
+        echo "$base $text" > "${utt_text}"
+    fi
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
@@ -260,15 +273,14 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     ${python} -m espnet.bin.asr_align \
         --config ${align_config} \
         --ngpu ${ngpu} \
-        --debugmode ${debugmode} \
         --verbose ${verbose} \
         --data-json ${feat_align_dir}/data.json \
         --model ${align_model} \
         --subsampling-factor ${subsampling_factor} \
         --min-window-size ${min_window_size} \
-        --use-dict-blank 1 \
+        --scoring-length ${scoring_length} \
         --api ${api} \
-        --utt-text ${align_dir}/utt_text \
+        --utt-text ${utt_text} \
         --output ${align_dir}/aligned_segments || exit 1;
 
     echo ""

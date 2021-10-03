@@ -1,17 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 docker_gpu=0
 docker_egs=
 docker_folders=
-docker_cuda=10.1
+docker_tag=latest
 
 docker_env=
 docker_cmd=
-docker_os=u18
 
 is_root=false
 is_local=false
 is_egs2=false
+is_extras=false
 
 while test $# -gt 0
 do
@@ -68,25 +68,21 @@ fi
 
 from_tag="cpu"
 if [ ! "${docker_gpu}" == "-1" ]; then
-    if [ -z "${docker_cuda}" ]; then
-        # If the docker_cuda is not set, the program will automatically 
-        # search the installed version with default configurations (apt)
-        docker_cuda=$( nvcc -V | grep release )
-        docker_cuda=${docker_cuda#*"release "}
-        docker_cuda=${docker_cuda%,*}
-    fi
+    docker_cuda=$( nvcc -V | grep release )
+    docker_cuda=${docker_cuda#*"release "}
+    docker_cuda=${docker_cuda%,*}
+
     # After search for your cuda version, if the variable docker_cuda is empty the program will raise an error
     if [ -z "${docker_cuda}" ]; then
-        echo "CUDA was not found in your system. Use CPU image or install NVIDIA-DOCKER, CUDA and NVCC for GPU image."
+        echo "CUDA was not found in your system. Use CPU image or install NVIDIA-DOCKER, CUDA for GPU image."
         exit 1
-    else
-        from_tag="gpu-cuda${docker_cuda}-cudnn7"
     fi
+        from_tag="gpu"
 fi
 
-if [ ! -z "${docker_os}" ]; then
-    from_tag="${from_tag}-${docker_os}"
-fi
+from_tag="${from_tag}-${docker_tag}"
+
+EXTRAS=${is_extras}
 
 if [ ${is_local} = true ]; then
     from_tag="${from_tag}-local"
@@ -118,6 +114,7 @@ if [ ${is_root} = false ]; then
         build_args="--build-arg FROM_TAG=${from_tag}"
         build_args="${build_args} --build-arg THIS_USER=${HOME##*/}"
         build_args="${build_args} --build-arg THIS_UID=${UID}"
+        build_args="${build_args} --build-arg EXTRA_LIBS=${EXTRAS}"
 
         echo "Now running docker build ${build_args} -f prebuilt/Dockerfile -t espnet/espnet:${container_tag} ."
         (docker build ${build_args} -f prebuilt/Dockerfile -t  espnet/espnet:${container_tag} .) || exit 1

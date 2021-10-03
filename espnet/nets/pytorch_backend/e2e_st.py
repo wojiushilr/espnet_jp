@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# encoding: utf-8
-
 # Copyright 2019 Kyoto University (Hirofumi Inaguma)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -115,6 +112,10 @@ class E2E(STInterface, torch.nn.Module):
         group = parser.add_argument_group("E2E decoder setting")
         group = add_arguments_rnn_decoder_common(group)
         return parser
+
+    def get_total_subsampling_factor(self):
+        """Get total subsampling factor."""
+        return self.enc.conv_subsampling_factor * int(np.prod(self.subsample))
 
     def __init__(self, idim, odim, args):
         """Construct an E2E object.
@@ -289,7 +290,7 @@ class E2E(STInterface, torch.nn.Module):
         # 0. Extract target language ID
         if self.multilingual:
             tgt_lang_ids = ys_pad[:, 0:1]
-            ys_pad = ys_pad[:, 1:]  # remove target language ID in the beggining
+            ys_pad = ys_pad[:, 1:]  # remove target language ID in the beginning
         else:
             tgt_lang_ids = None
 
@@ -558,7 +559,9 @@ class E2E(STInterface, torch.nn.Module):
         :return: N-best decoding results
         :rtype: list
         """
+        logging.info("input lengths: " + str(x.shape[0]))
         hs = self.encode(x).unsqueeze(0)
+        logging.info("encoder output lengths: " + str(hs.size(1)))
 
         # 2. Decoder
         # decode the first utterance
@@ -615,7 +618,7 @@ class E2E(STInterface, torch.nn.Module):
             # 1. Encoder
             if self.multilingual:
                 tgt_lang_ids = ys_pad[:, 0:1]
-                ys_pad = ys_pad[:, 1:]  # remove target language ID in the beggining
+                ys_pad = ys_pad[:, 1:]  # remove target language ID in the beginning
             else:
                 tgt_lang_ids = None
             hpad, hlens, _ = self.enc(xs_pad, ilens)

@@ -1,3 +1,4 @@
+"""Reporter module."""
 from collections import defaultdict
 from contextlib import contextmanager
 import dataclasses
@@ -18,13 +19,11 @@ import warnings
 import humanfriendly
 import numpy as np
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from typeguard import check_argument_types
 from typeguard import check_return_type
+import wandb
 
-if LooseVersion(torch.__version__) >= LooseVersion("1.1.0"):
-    from torch.utils.tensorboard import SummaryWriter
-else:
-    from tensorboardX import SummaryWriter
 
 Num = Union[float, int, complex, torch.Tensor, np.ndarray]
 
@@ -94,6 +93,16 @@ def aggregate(values: Sequence["ReportedValue"]) -> Num:
         raise NotImplementedError(f"type={type(values[0])}")
     assert check_return_type(retval)
     return retval
+
+
+def wandb_get_prefix(key: str):
+    if key.startswith("valid"):
+        return "valid/"
+    if key.startswith("train"):
+        return "train/"
+    if key.startswith("attn"):
+        return "attn/"
+    return "metrics/"
 
 
 class ReportedValue:
@@ -232,6 +241,22 @@ class SubReporter:
             v = aggregate(values)
             summary_writer.add_scalar(key2, v, self.total_count)
 
+    def wandb_log(self, start: int = None):
+        if start is None:
+            start = 0
+        if start < 0:
+            start = self.count + start
+
+        d = {}
+        for key2, stats_list in self.stats.items():
+            assert len(stats_list) == self.count, (len(stats_list), self.count)
+            # values: List[ReportValue]
+            values = stats_list[start:]
+            v = aggregate(values)
+            d[wandb_get_prefix(key2) + key2] = v
+        d["iteration"] = self.total_count
+        wandb.log(d)
+
     def finished(self) -> None:
         self._finished = True
 
@@ -332,6 +357,14 @@ class Reporter:
             seconds=time.perf_counter() - sub_reporter.start_time
         )
         stats["total_count"] = sub_reporter.total_count
+        if LooseVersion(torch.__version__) >= LooseVersion("1.4.0"):
+            if torch.cuda.is_initialized():
+                stats["gpu_max_cached_mem_GB"] = (
+                    torch.cuda.max_memory_reserved() / 2 ** 30
+                )
+        else:
+            if torch.cuda.is_available() and torch.cuda.max_memory_cached() > 0:
+                stats["gpu_cached_mem_GB"] = torch.cuda.max_memory_cached() / 2 ** 30
 
         self.stats.setdefault(self.epoch, {})[sub_reporter.key] = stats
         sub_reporter.finished()
@@ -524,6 +557,20 @@ class Reporter:
                     self.stats[epoch][key1][key2],
                     epoch,
                 )
+
+    def wandb_log(self, epoch: int = None):
+        if epoch is None:
+            epoch = self.get_epoch()
+
+        d = {}
+        for key1 in self.get_keys(epoch):
+            for key2 in self.stats[epoch][key1]:
+                if key2 in ("time", "total_count"):
+                    continue
+                key = f"{key1}_{key2}_epoch"
+                d[wandb_get_prefix(key) + key] = self.stats[epoch][key1][key2]
+        d["epoch"] = epoch
+        wandb.log(d)
 
     def state_dict(self):
         return {"stats": self.stats, "epoch": self.epoch}
