@@ -1,5 +1,5 @@
 batch_type: folded
-batch_size: 64
+batch_size: 32
 accum_grad: 2
 max_epoch: 200
 patience: none
@@ -10,18 +10,6 @@ best_model_criterion:
     - acc
     - max
 keep_nbest_models: 10
-
-# encoder: transformer
-# encoder_conf:
-#     output_size: 256
-#     attention_heads: 4
-#     linear_units: 2048
-#     num_blocks: 12
-#     dropout_rate: 0.1
-#     positional_dropout_rate: 0.1
-#     attention_dropout_rate: 0.0
-#     input_layer: conv2d
-#     normalize_before: true
 
 # encoder related
 encoder: conformer
