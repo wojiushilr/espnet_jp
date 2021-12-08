@@ -46,12 +46,23 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     local/change_sampling_rate.sh ${fs}
 fi
 
+#　少量データ
+# if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
+#     # make evaluation and devlopment sets
+#     utils/subset_data_dir.sh --first data/train 100 data/deveval
+#     utils/subset_data_dir.sh --first data/deveval 50 data/${recog_set}
+#     utils/subset_data_dir.sh --last data/deveval 50 data/${train_dev}
+#     n=$(( $(wc -l < data/train/wav.scp) - 100 ))
+#     utils/subset_data_dir.sh --last data/train ${n} data/${train_set}
+# fi
+
+#大量データ
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     # make evaluation and devlopment sets
-    utils/subset_data_dir.sh --first data/train 100 data/deveval
-    utils/subset_data_dir.sh --first data/deveval 50 data/${recog_set}
-    utils/subset_data_dir.sh --last data/deveval 50 data/${train_dev}
-    n=$(( $(wc -l < data/train/wav.scp) - 100 ))
+    utils/subset_data_dir.sh --first data/train 500 data/deveval
+    utils/subset_data_dir.sh --first data/deveval 250 data/${recog_set}
+    utils/subset_data_dir.sh --last data/deveval 250 data/${train_dev}
+    n=$(( $(wc -l < data/train/wav.scp) - 500 ))
     utils/subset_data_dir.sh --last data/train ${n} data/${train_set}
 fi
 
