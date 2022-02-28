@@ -53,7 +53,9 @@ scheduler_conf:
 
 # minibatch related
 batch_type: numel
-batch_bins: 15000000
+# batch_bins: 15000000
+batch_bins: 5000000 # colab　16gb memory 制限のため, 32gbの場合は 15000000 でいけます
+
 
 best_model_criterion:
 -   - valid

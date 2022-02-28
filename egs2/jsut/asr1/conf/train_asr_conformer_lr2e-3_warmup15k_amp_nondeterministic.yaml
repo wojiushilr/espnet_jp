@@ -44,7 +44,8 @@ num_workers: 4
 sort_in_batch: descending       # how to sort data in making batch
 sort_batch: descending          # how to sort created batches
 batch_type: numel
-batch_bins: 16000000
+# batch_bins: 16000000
+batch_bins: 5000000 # colab　16gb memory 制限のため, 32gbの場合は 15000000 でいけます
 accum_grad: 4
 max_epoch: 70
 patience: none
