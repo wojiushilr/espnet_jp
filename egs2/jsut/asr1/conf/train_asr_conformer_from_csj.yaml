@@ -2,7 +2,7 @@
 batch_type: numel
 batch_bins: 5000000 # colab　16gb memory 制限のため, 32gbの場合は 15000000 でいけます
 accum_grad: 6
-max_epoch: 100
+max_epoch: 200
 patience: none
 init: xavier_uniform
 best_model_criterion:
@@ -46,7 +46,7 @@ model_conf:
 
 optim: adam
 optim_conf:
-    lr: 0.002
+    lr: 0.003
 scheduler: warmuplr
 scheduler_conf:
     warmup_steps: 25000
