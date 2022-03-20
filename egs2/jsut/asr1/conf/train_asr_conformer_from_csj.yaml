@@ -46,7 +46,7 @@ model_conf:
 
 optim: adam
 optim_conf:
-    lr: 0.003
+    lr: 0.002
 scheduler: warmuplr
 scheduler_conf:
     warmup_steps: 25000
