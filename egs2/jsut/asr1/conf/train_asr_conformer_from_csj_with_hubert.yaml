@@ -51,7 +51,7 @@ decoder_conf:
     src_attention_dropout_rate: 0.1
 
 model_conf:
-    ctc_weight: 0.3
+    ctc_weight: 0.0
     lsm_weight: 0.1
     length_normalized_loss: false
 
