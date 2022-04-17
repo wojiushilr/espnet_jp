@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# データ取得、前処理
 
 set -e
 set -u
@@ -38,8 +39,9 @@ recog_set=eval1
 # fi
 
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
+    # データを格納フォルダをraw_dataに変更する必要
     # Initial normalization of the data
-    local/data_prep.sh ${db_root}/jsut_ver1.1 data/train ${fs}
+    local/data_prep.sh ${db_root}/raw_data data/train ${fs}
     utils/validate_data_dir.sh --no-feats data/train
 
     # changing the sampling rate option in pitch.conf and fbank.conf

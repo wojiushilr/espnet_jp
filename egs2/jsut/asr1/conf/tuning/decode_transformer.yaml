@@ -1,4 +1,4 @@
-lm_weight: 0.5 # 0.3 # 0.1
+lm_weight: 0.2 # 0.3 # 0.1
 beam_size: 10 # speed up
 penalty: 0.0
 maxlenratio: 0.0

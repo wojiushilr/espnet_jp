@@ -18,6 +18,7 @@ train_set=tr_no_dev
 valid_set=dev
 test_sets="dev eval1"
 
+# デフォルトパラメタ
 asr_config=conf/tuning/train_asr_conformer8.yaml
 inference_config=conf/decode_transformer.yaml
 lm_config=conf/train_lm.yaml

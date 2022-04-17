@@ -16,7 +16,7 @@ max_epoch: 30 #15
 
 optim: adam
 optim_conf:
-   lr: 0.01
+   lr: 0.001
 scheduler: warmuplr
 scheduler_conf:
    warmup_steps: 25000
