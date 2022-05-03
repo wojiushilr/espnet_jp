@@ -1,5 +1,5 @@
 lm_weight: 0.2 # 0.3 # 0.1
-beam_size: 10 # speed up
+beam_size: 20 # change 10 to speed up
 penalty: 0.0
 maxlenratio: 0.0
 minlenratio: 0.0

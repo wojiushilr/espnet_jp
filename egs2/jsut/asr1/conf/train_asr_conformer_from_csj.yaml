@@ -1,8 +1,8 @@
 # This configuration requires 4 GPUs with 32GB memory
 batch_type: numel
-batch_bins: 5000000 # colab　16gb memory 制限のため, 32gbの場合は 15000000 でいけます
+batch_bins: 7000000
 accum_grad: 6
-max_epoch: 200
+max_epoch: 150
 patience: none
 init: xavier_uniform
 best_model_criterion:
