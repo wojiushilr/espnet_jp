@@ -67,3 +67,17 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 fi
 
 log "Successfully finished. [elapsed=${SECONDS}s]"
+
+#   subset_data_dir.sh
+#   echo "Usage:"
+#   echo "  subset_data_dir.sh [--speakers|--shortest|--first|--last|--per-spk] <srcdir> <num-utt> <destdir>"
+#   echo "  subset_data_dir.sh [--spk-list <speaker-list-file>] <srcdir> <destdir>"
+#   echo "  subset_data_dir.sh [--utt-list <utt-list-file>] <srcdir> <destdir>"
+#   echo "By default, randomly selects <num-utt> utterances from the data directory."
+#   echo "With --speakers, randomly selects enough speakers that we have <num-utt> utterances"
+#   echo "With --per-spk, selects <num-utt> utterances per speaker, if available."
+#   echo "With --first, selects the first <num-utt> utterances"
+#   echo "With --last, selects the last <num-utt> utterances"
+#   echo "With --shortest, selects the shortest <num-utt> utterances."
+#   echo "With --spk-list, reads the speakers to keep from <speaker-list-file>"
+#   echo "With --utt-list, reads the utterances to keep from <utt-list-file>"

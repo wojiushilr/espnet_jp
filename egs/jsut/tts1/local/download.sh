@@ -13,18 +13,18 @@ fi
 
 # set -euo pipefail
 
-# cwd=$(pwd)
-# if [ ! -e ${download_dir}/jsut_ver1.1 ]; then
-#     mkdir -p ${download_dir}
-#     cd ${download_dir}
-#     wget http://ss-takashi.sakura.ne.jp/corpus/jsut_ver1.1.zip
-#     unzip -o ./*.zip
-#     rm ./*.zip
-#     cd ${cwd}
-#     echo "Successfully downloaded data."
-# else
-#     echo "Already exists. Skipped."
-# fi
+cwd=$(pwd)
+if [ ! -e ${download_dir}/jsut_ver1.1 ]; then
+    mkdir -p ${download_dir}
+    cd ${download_dir}
+    wget http://ss-takashi.sakura.ne.jp/corpus/jsut_ver1.1.zip
+    unzip -o ./*.zip
+    rm ./*.zip
+    cd ${cwd}
+    echo "Successfully downloaded data."
+else
+    echo "Already exists. Skipped."
+fi
 
 # if [ ! -e ${download_dir}/jsut-lab ]; then
 #     echo "Downloading full-context labels for jsut v1.1..."
